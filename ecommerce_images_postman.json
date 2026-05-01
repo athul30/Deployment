@@ -1,0 +1,283 @@
+{
+  "info": {
+    "name": "Week 10 — E-Commerce Image Upload API",
+    "description": "Product image upload with validation & auto-thumbnail generation. Built on Week 9 E-Commerce API.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:5000"
+    },
+    {
+      "key": "token",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"demo\",\n  \"email\": \"demo@example.com\",\n  \"password\": \"demo123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login (copy token from response)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.token) {",
+                  "    pm.collectionVariables.set('token', jsonData.token);",
+                  "    console.log('Token saved!');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"demo\",\n  \"password\": \"demo123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "List Products",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/products",
+              "host": ["{{base_url}}"],
+              "path": ["api", "products"]
+            }
+          }
+        },
+        {
+          "name": "Get Product by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/products/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "products", "1"]
+            }
+          }
+        },
+        {
+          "name": "Create Product",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Product\",\n  \"description\": \"A test product for image upload\",\n  \"price\": 49.99,\n  \"stock\": 10,\n  \"category_id\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/products",
+              "host": ["{{base_url}}"],
+              "path": ["api", "products"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Product Images (Week 10)",
+      "item": [
+        {
+          "name": "Upload Single Image",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "images",
+                  "type": "file",
+                  "description": "Select an image file (png, jpg, jpeg, gif, webp). Max 5 MB."
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/products/1/images",
+              "host": ["{{base_url}}"],
+              "path": ["api", "products", "1", "images"]
+            },
+            "description": "Upload a single image to product #1. Uses multipart/form-data with field name 'images'."
+          }
+        },
+        {
+          "name": "Upload Multiple Images",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "images",
+                  "type": "file",
+                  "description": "First image file"
+                },
+                {
+                  "key": "images",
+                  "type": "file",
+                  "description": "Second image file"
+                },
+                {
+                  "key": "images",
+                  "type": "file",
+                  "description": "Third image file"
+                },
+                {
+                  "key": "primary_index",
+                  "value": "0",
+                  "type": "text",
+                  "description": "Zero-based index of the image to set as primary"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/products/1/images",
+              "host": ["{{base_url}}"],
+              "path": ["api", "products", "1", "images"]
+            },
+            "description": "Upload multiple images at once. Set primary_index to choose which one is the primary image."
+          }
+        },
+        {
+          "name": "Upload Invalid File (Validation Test)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "images",
+                  "type": "file",
+                  "description": "Select a non-image file (e.g. .txt, .pdf) to test validation"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/products/1/images",
+              "host": ["{{base_url}}"],
+              "path": ["api", "products", "1", "images"]
+            },
+            "description": "Test validation by uploading a non-image file. Should return a 400 error."
+          }
+        },
+        {
+          "name": "List Product Images",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/products/1/images",
+              "host": ["{{base_url}}"],
+              "path": ["api", "products", "1", "images"]
+            },
+            "description": "Get all images for product #1, including URLs for originals and thumbnails."
+          }
+        },
+        {
+          "name": "Set Primary Image",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/products/1/images/1/primary",
+              "host": ["{{base_url}}"],
+              "path": ["api", "products", "1", "images", "1", "primary"]
+            },
+            "description": "Set image #1 as the primary image for product #1."
+          }
+        },
+        {
+          "name": "Delete Product Image",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/products/1/images/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "products", "1", "images", "1"]
+            },
+            "description": "Delete image #1 from product #1. Removes both original and thumbnail files."
+          }
+        },
+        {
+          "name": "View Uploaded Image (browser)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/static/uploads/products/<filename>",
+              "host": ["{{base_url}}"],
+              "path": ["static", "uploads", "products", "<filename>"]
+            },
+            "description": "Replace <filename> with the actual stored_filename from the upload response to view the image."
+          }
+        },
+        {
+          "name": "View Thumbnail (browser)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/static/uploads/thumbnails/<filename>",
+              "host": ["{{base_url}}"],
+              "path": ["static", "uploads", "thumbnails", "<filename>"]
+            },
+            "description": "Replace <filename> with the actual thumbnail_filename from the upload response to view the thumbnail."
+          }
+        }
+      ]
+    }
+  ]
+}
