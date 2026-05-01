@@ -81,6 +81,64 @@ def create_app():
             },
         }), 200
 
+    # ── Seed endpoint (for production DB) ──
+    @app.route("/api/seed", methods=["POST"])
+    def seed_database():
+        from models import Category, Product, User
+        from utils import hash_password
+
+        # Check if already seeded
+        if Category.query.first():
+            return jsonify({"message": "Database already seeded!", "categories": Category.query.count(), "products": Product.query.count()}), 200
+
+        categories_data = [
+            {"name": "Electronics", "description": "Smartphones, laptops, and gadgets"},
+            {"name": "Clothing", "description": "Men's and women's apparel"},
+            {"name": "Books", "description": "Fiction, non-fiction, and educational books"},
+            {"name": "Home & Kitchen", "description": "Furniture, appliances, and decor"},
+            {"name": "Sports & Outdoors", "description": "Fitness equipment and outdoor gear"},
+            {"name": "Beauty & Personal Care", "description": "Skincare, makeup, and grooming"},
+        ]
+
+        products_data = [
+            {"name": "iPhone 16 Pro", "description": "Apple flagship with A18 chip", "price": 999.99, "stock": 50, "cat": "Electronics"},
+            {"name": "Samsung Galaxy S25", "description": "Samsung flagship with Snapdragon 8 Gen 4", "price": 899.99, "stock": 40, "cat": "Electronics"},
+            {"name": "MacBook Air M4", "description": "Ultra-thin laptop with Apple M4 chip", "price": 1299.99, "stock": 25, "cat": "Electronics"},
+            {"name": "Sony WH-1000XM6", "description": "Premium noise-cancelling headphones", "price": 349.99, "stock": 100, "cat": "Electronics"},
+            {"name": "Nike Air Max Sneakers", "description": "Classic running shoes", "price": 129.99, "stock": 200, "cat": "Clothing"},
+            {"name": "Levi's 501 Original Jeans", "description": "Iconic straight-fit denim jeans", "price": 69.99, "stock": 150, "cat": "Clothing"},
+            {"name": "Clean Code by Robert Martin", "description": "A handbook of agile software craftsmanship", "price": 39.99, "stock": 300, "cat": "Books"},
+            {"name": "Python Crash Course", "description": "Hands-on introduction to Python", "price": 35.99, "stock": 180, "cat": "Books"},
+            {"name": "Instant Pot Duo 7-in-1", "description": "Electric pressure cooker, 6 quart", "price": 89.99, "stock": 120, "cat": "Home & Kitchen"},
+            {"name": "Dyson V15 Detect Vacuum", "description": "Cordless vacuum with laser dust detection", "price": 749.99, "stock": 35, "cat": "Home & Kitchen"},
+            {"name": "Peloton Bike+", "description": "Indoor exercise bike with rotating screen", "price": 2495.00, "stock": 10, "cat": "Sports & Outdoors"},
+            {"name": "Garmin Fenix 8 Watch", "description": "Premium GPS multisport smartwatch", "price": 899.99, "stock": 40, "cat": "Sports & Outdoors"},
+            {"name": "Dyson Airwrap Styler", "description": "Multi-styler with Coanda airflow", "price": 599.99, "stock": 30, "cat": "Beauty & Personal Care"},
+            {"name": "La Mer Moisturizing Cream", "description": "Luxury face moisturizer", "price": 190.00, "stock": 90, "cat": "Beauty & Personal Care"},
+        ]
+
+        cat_map = {}
+        for c in categories_data:
+            cat = Category(name=c["name"], description=c["description"])
+            db.session.add(cat)
+            db.session.flush()
+            cat_map[c["name"]] = cat.id
+
+        for p in products_data:
+            product = Product(name=p["name"], description=p["description"], price=p["price"], stock=p["stock"], category_id=cat_map[p["cat"]])
+            db.session.add(product)
+
+        demo_user = User(username="demo", email="demo@example.com", password_hash=hash_password("demo123"))
+        db.session.add(demo_user)
+        db.session.commit()
+
+        return jsonify({
+            "message": "Database seeded successfully!",
+            "categories": len(categories_data),
+            "products": len(products_data),
+            "demo_user": {"username": "demo", "password": "demo123"}
+        }), 201
+
     return app
 
 
