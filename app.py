@@ -129,8 +129,9 @@ def create_app():
                 product = Product(name=p["name"], description=p["description"], price=p["price"], stock=p["stock"], category_id=cat_map[p["cat"]])
                 db.session.add(product)
 
-            demo_user = User(username="demo", email="demo@example.com", password_hash=hash_password("demo123"))
-            db.session.add(demo_user)
+            if not User.query.filter_by(username="demo").first():
+                demo_user = User(username="demo", email="demo@example.com", password_hash=hash_password("demo123"))
+                db.session.add(demo_user)
             db.session.commit()
 
             return jsonify({
